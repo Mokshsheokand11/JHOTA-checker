@@ -1,72 +1,78 @@
 import { GoogleGenAI } from "@google/genai";
 
-console.log('geminiService.ts is executing');
-console.log('API KEY from process.env:', process.env.GEMINI_API_KEY);
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || 'PLACEHOLDER' });
+// ✅ Get API Key safely
+const apiKey = import.env.VITE_GEMINI_API_KEY;
+
+// ✅ Debug (remove later if you want)
+console.log("Gemini Service Loaded");
+console.log("API KEY exists:", !!apiKey);
+
+// ❌ If key missing, don't crash app
+if (!apiKey) {
+  console.error("Gemini API key is missing in .env file");
+}
+
+// ✅ Create AI instance ONLY if key exists
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 export async function evaluateJhota(userData: any) {
+  if (!ai) {
+    return "Something went wrong. Please make sure your Gemini API key is set in .env file.";
+  }
+
   const prompt = `
-    You are an AI physique and personality evaluator.
-    Your task is to analyze the provided user data and determine whether the person qualifies as a "Jhota".
+You are an AI physique and personality evaluator.
+Analyze the provided user data and determine whether the person qualifies as a "Jhota".
 
-    Definition:
-    "Jhota" (slang) refers to a heavily built, physically strong young man with raw power, muscular build, dominant presence, and confident personality.
+Definition:
+"Jhota" refers to a heavily built, physically strong young man with dominant presence and confidence.
 
-    Evaluation Criteria:
-    1. Physical strength (height, weight, muscle mass, pushups, bench press, activity level)
-    2. Lifestyle (gym frequency, diet quality, protein intake, physical work)
-    3. Personality traits (dominance, leadership, competitiveness, confidence)
+Evaluation Criteria:
+1. Physical strength
+2. Lifestyle habits
+3. Personality traits
 
-    Instructions:
-    1. Calculate a Jhota Score from 0 to 100.
-    2. Categorize:
-       - 0–40 → Not a Jhota
-       - 41–70 → Semi Jhota
-       - 71–100 → Certified Jhota
-    3. Keep tone fun, energetic, slightly desi but respectful.
-    4. Keep response under 250 words.
+Instructions:
+- Calculate Jhota Score (0–100)
+- 0–40 → Not a Jhota
+- 41–70 → Semi Jhota
+- 71–100 → Certified Jhota
+- Keep tone fun, energetic, desi but respectful
+- Keep response under 250 words
 
-    If the score is below 70:
-    Provide a clear improvement plan including:
-    - Physical training improvements
-    - Diet changes
-    - Lifestyle upgrades
-    - Personality development tips
-    - Give practical weekly goals
+User Data:
+${JSON.stringify(userData, null, 2)}
 
-    Output Format (Strictly follow this):
+Output Format:
 
-    Jhota Score: [Score]/100
-    Category: [Category]
+Jhota Score: [Score]/100
+Category: [Category]
 
-    Strength Analysis:
-    [Short explanation]
+Strength Analysis:
+[Short explanation]
 
-    Personality Analysis:
-    [Short explanation]
+Personality Analysis:
+[Short explanation]
 
-    Final Verdict:
-    [Fun summary]
+Final Verdict:
+[Fun summary]
 
-    If Improvement Needed:
-    🔥 Gym Plan: [Plan]
-    🥗 Diet Plan: [Plan]
-    🧠 Personality Upgrade: [Tips]
-    📈 30-Day Jhota Challenge: [Goals]
-
-    User Data:
-    ${JSON.stringify(userData, null, 2)}
-  `;
+If Improvement Needed:
+🔥 Gym Plan:
+🥗 Diet Plan:
+🧠 Personality Upgrade:
+📈 30-Day Jhota Challenge:
+`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-1.5-flash",
       contents: prompt,
     });
 
-    return response.text;
-  } catch (error) {
-    console.error("Error evaluating Jhota:", error);
-    throw error;
+    return response.text || "No response generated.";
+  } catch (error: any) {
+    console.error("Gemini API Error:", error);
+    return "Gemini API request failed. Please check your API key and internet connection.";
   }
 }

@@ -63,12 +63,12 @@ export default function App() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Mock evaluation for testing
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setResult("# JHOTA STATUS: CONFIRMED\n\nYou are a certified Jhota based on the mock test.");
+      const response = await evaluateJhota(formData);
+      setResult(response);
       setStep(4);
     } catch (error) {
-      alert("Something went wrong. Please try again.");
+      console.error("Error:", error);
+      alert("Something went wrong. Please make sure your Gemini API key is set in .env file.");
     } finally {
       setLoading(false);
     }
