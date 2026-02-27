@@ -49,7 +49,8 @@ export default function App() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<UserData>(initialData);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<{ title: string; content: string }[] | null>(null);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -65,6 +66,7 @@ export default function App() {
     try {
       const response = await evaluateJhota(formData);
       setResult(response);
+      setCurrentCardIndex(0);
       setStep(4);
     } catch (error) {
       console.error("Error:", error);
@@ -78,6 +80,7 @@ export default function App() {
     setStep(1);
     setFormData(initialData);
     setResult(null);
+    setCurrentCardIndex(0);
   };
 
   return (
@@ -323,25 +326,67 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="space-y-6"
               >
-                <div className="glass-card p-8 border-white/20 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4">
-                    <Flame className="w-12 h-12 text-white/10 animate-pulse" />
-                  </div>
+                <div style={{ perspective: '1000px' }} className="relative">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentCardIndex}
+                      initial={{ rotateY: 90, opacity: 0 }}
+                      animate={{ rotateY: 0, opacity: 1 }}
+                      exit={{ rotateY: -90, opacity: 0 }}
+                      transition={{ duration: 0.4, type: "spring", stiffness: 100, damping: 14 }}
+                      className="glass-card p-8 border-white/20 relative overflow-hidden min-h-[400px] flex flex-col"
+                    >
+                      <div className="absolute top-0 right-0 p-4">
+                        <Flame className="w-12 h-12 text-white/10 animate-pulse" />
+                      </div>
 
-                  <div className="prose prose-invert max-w-none markdown-body">
-                    <Markdown>{result}</Markdown>
-                  </div>
+                      <h3 className="text-2xl font-display uppercase mb-6 pr-12 text-white/90">
+                        {result[currentCardIndex].title}
+                      </h3>
 
-                  <button
-                    onClick={reset}
-                    className="mt-8 w-full border border-white/20 rounded-lg py-3 font-display uppercase flex items-center justify-center gap-2 hover:bg-white/5 transition-all"
-                  >
-                    <RefreshCcw className="w-4 h-4" /> Re-Evaluate
-                  </button>
+                      <div className="prose prose-invert max-w-none markdown-body flex-grow">
+                        <Markdown>{result[currentCardIndex].content}</Markdown>
+                      </div>
+
+                      <div className="mt-8 flex items-center justify-between pt-6 border-t border-white/10">
+                        <span className="text-xs font-mono text-white/40">
+                          {currentCardIndex + 1} / {result.length}
+                        </span>
+
+                        <div className="flex gap-2 relative z-10">
+                          <button
+                            onClick={() => setCurrentCardIndex(prev => Math.max(0, prev - 1))}
+                            disabled={currentCardIndex === 0}
+                            className="p-2 border border-white/20 rounded-lg hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5 rotate-180" />
+                          </button>
+                          <button
+                            onClick={() => setCurrentCardIndex(prev => Math.min(result.length - 1, prev + 1))}
+                            disabled={currentCardIndex === result.length - 1}
+                            className="p-2 border border-white/20 rounded-lg hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
 
+                {currentCardIndex === result.length - 1 && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={reset}
+                    className="w-full border border-white/20 rounded-lg py-3 font-display uppercase flex items-center justify-center gap-2 hover:bg-white/5 transition-all"
+                  >
+                    <RefreshCcw className="w-4 h-4" /> Re-Evaluate
+                  </motion.button>
+                )}
+
                 {/* Fun Badge */}
-                <div className="flex justify-center">
+                <div className="flex justify-center mt-6">
                   <div className="bg-white text-black px-4 py-1 font-mono text-[10px] uppercase tracking-widest rounded-full">
                     Official Jhota Certification System v1.0
                   </div>
