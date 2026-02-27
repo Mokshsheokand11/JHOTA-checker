@@ -37,11 +37,40 @@ Environment: Localhost Development
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+> The API key is now kept on a simple Node.js server so it isn’t embedded
+> in the browser. This prevents accidental exposure when you build for
+> production.
 
+**Prerequisites:** Node.js (v18+ recommended)
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+2. Create a `.env` file at the project root with the following variable:
+   ```dotenv
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+   _(you can also keep a copy in `VITE_GEMINI_API_KEY` during development, but
+   the client won't use it anymore – only the server reads it.)_
+3. Start the development servers. You can run them in two terminals:
+   ```bash
+   npm run dev:server   # starts express backend on port 4000
+   npm run dev         # starts Vite frontend on port 3000
+   ```
+   or use `npm run dev:all` to launch both together (requires `concurrently`).
+
+4. Open `http://localhost:3000` in your browser and submit the form;
+   the request will be proxied through `/api/jhota`.
+
+
+### Production build
+
+1. Build the frontend:
+   ```bash
+   npm run build
+   ```
+2. Start the server (it will serve the static files automatically):
+   ```bash
+   npm run start
+   ```
