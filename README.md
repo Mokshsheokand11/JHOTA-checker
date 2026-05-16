@@ -60,8 +60,7 @@ Environment: Localhost Development
    ```
    or use `npm run dev:all` to launch both together (requires `concurrently`).
 
-4. Open `http://localhost:3000` in your browser and submit the form;
-   the request will be proxied through `/api/jhota`.
+
 
 
 ### Production build
